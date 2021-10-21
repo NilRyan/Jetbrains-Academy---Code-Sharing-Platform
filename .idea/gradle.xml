@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="delegatedBuild" value="false" />
+        <option name="testRunner" value="GRADLE" />
+        <option name="distributionType" value="WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Code Sharing Platform/task" />
+            <option value="$PROJECT_DIR$/Topics/Getting data from REST/Getting all tasks" />
+            <option value="$PROJECT_DIR$/Topics/Getting data from REST/Theory" />
+            <option value="$PROJECT_DIR$/Topics/Getting data from REST/Two endpoints" />
+            <option value="$PROJECT_DIR$/Topics/Getting data from REST/Welcome" />
+            <option value="$PROJECT_DIR$/Topics/Handling requests with bodies/Adding new functionality" />
+            <option value="$PROJECT_DIR$/Topics/Handling requests with bodies/Important message" />
+            <option value="$PROJECT_DIR$/Topics/Handling requests with bodies/Receiving and returning products" />
+            <option value="$PROJECT_DIR$/Topics/Handling requests with bodies/Theory" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/10 days before" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/2 weeks after" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/30 years before and after" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/Convert numbers to days" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/Getting information on a day" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/Print dates of a year with an offset" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/The first and the last day of a month" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/The first day of a month or not" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/The last day of a month" />
+            <option value="$PROJECT_DIR$/Topics/LocalDate/Theory" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Add 11 hours and print the date" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Add days and subtract hours" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Adding N minutes" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Merging date-time instances" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Subtracting hours and adding minutes" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/The passed hours since the beginning of year" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Theory" />
+            <option value="$PROJECT_DIR$/Topics/LocalDateTime/Whole hours between two date-time pairs" />
+            <option value="$PROJECT_DIR$/Topics/LocalTime/Return time without seconds" />
+            <option value="$PROJECT_DIR$/Topics/LocalTime/Seconds since start of a day" />
+            <option value="$PROJECT_DIR$/Topics/LocalTime/Some hours and minutes ago" />
+            <option value="$PROJECT_DIR$/Topics/LocalTime/Theory" />
+            <option value="$PROJECT_DIR$/Topics/Posting and deleting data via REST/Theory" />
+            <option value="$PROJECT_DIR$/Topics/Posting and deleting data via REST/Web calculator" />
+            <option value="$PROJECT_DIR$/Topics/The Collections Framework overview/Blacklist" />
+            <option value="$PROJECT_DIR$/Topics/The Collections Framework overview/Squares list" />
+            <option value="$PROJECT_DIR$/Topics/The Collections Framework overview/Theory" />
+            <option value="$PROJECT_DIR$/Topics/The List interface/Backward indexes" />
+            <option value="$PROJECT_DIR$/Topics/The List interface/Count the value occurrences" />
+            <option value="$PROJECT_DIR$/Topics/The List interface/The longest string in the list" />
+            <option value="$PROJECT_DIR$/Topics/The List interface/Theory" />
+            <option value="$PROJECT_DIR$/util" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
