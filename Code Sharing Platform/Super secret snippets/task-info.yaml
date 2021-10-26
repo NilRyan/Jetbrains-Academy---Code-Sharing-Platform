@@ -634,6 +634,494 @@ files:
         }
     }
   learner_created: false
+- name: src/platform/controller/ViewController.java
+  visible: true
+  text: |
+    package platform.controller;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.ui.Model;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.PathVariable;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import platform.dto.CodeResponse;
+    import platform.model.CodeEntity;
+    import platform.service.CodeService;
+    import platform.util.CodeMapper;
+
+    import java.time.LocalDateTime;
+    import java.time.Period;
+    import java.time.temporal.ChronoUnit;
+    import java.util.List;
+    import java.util.UUID;
+
+    @Controller
+    @RequestMapping(path = "/code", produces = "text/html")
+    public class ViewController {
+
+        private CodeService codeService;
+
+        @Autowired
+        public ViewController(CodeService codeService) {
+            this.codeService = codeService;
+        }
+
+        @GetMapping("/{id}")
+        public String getCode(@PathVariable UUID id, Model model) {
+            CodeEntity code = codeService.getCodeById(id);
+            long viewsLeft = Math.max(0, code.getViews() - code.getViewCount());
+            long timePassed = ChronoUnit.SECONDS.between(code.getDate(), LocalDateTime.now());
+            long timeLeft = timePassed > 0 && code.getTime() - timePassed > 0 ? code.getTime() - timePassed : 0;
+            CodeResponse codeResponse = CodeMapper.toCodeResponse(code, viewsLeft, timeLeft);
+            model.addAttribute("codeWithId", codeResponse);
+            return "code";
+        }
+
+        @GetMapping("/new")
+        public String getCodeNew() {
+            return "new";
+        }
+        @GetMapping("/latest")
+        public String getLatestCode(Model model) {
+            List<CodeEntity> latest = codeService.getPaginatedAndSortedCode();
+            List<CodeResponse> codeResponseList = CodeMapper.toListCodeResponse(latest);
+            model.addAttribute("latestList", codeResponseList);
+            return "latest";
+        }
+
+    }
+  learner_created: true
+- name: src/platform/util/CurrentDateTime.java
+  visible: true
+  text: |
+    package platform.util;
+
+    import java.time.LocalDateTime;
+    import java.time.format.DateTimeFormatter;
+
+    public class CurrentDateTime {
+        public static String getString(LocalDateTime date) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return date.format(formatter);
+        }
+
+    }
+  learner_created: true
+- name: src/resources/templates/latest.ftlh
+  visible: true
+  text: |-
+    <html>
+        <head>
+            <title>Latest</title>
+            <link rel="stylesheet"
+                  href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/default.min.css">
+            <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
+            <script>hljs.initHighlightingOnLoad();</script>
+        </head>
+        <body>
+            <#list latestList as codes>
+                <span id="load_date">${codes.getDate()}</span>
+                <pre id="code_snippet"><code>${codes.getCode()}</code></pre>
+            </#list>
+        </body>
+    </html>
+  learner_created: true
+- name: src/platform/service/CodeService.java
+  visible: true
+  text: |
+    package platform.service;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.data.domain.PageRequest;
+    import org.springframework.data.domain.Sort;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.stereotype.Service;
+    import org.springframework.web.server.ResponseStatusException;
+    import platform.dto.CodeForm;
+    import platform.model.CodeEntity;
+    import platform.repository.CodeRepository;
+
+    import java.time.LocalDateTime;
+    import java.util.List;
+    import java.util.Optional;
+    import java.util.UUID;
+
+    @Service
+    public class CodeService {
+        private final CodeRepository codeRepository;
+
+        @Autowired
+        public CodeService(CodeRepository codeRepository) {
+            this.codeRepository = codeRepository;
+        }
+
+        /*
+           DONE
+               1. Change Long ID to UUID
+               2. POST /api/code/new should take a JSON object with a field code and two other fields:
+                    - a. time -> field contains the time (in seconds) during which the snippet is accessible
+                    - b. views -> field contains a number of views allowed for this snippet
+                    - 0 and negative values corresponds to absence of the restriction
+               3. GET /code/new
+                    1. <input id="time_restriction" type="text"/> should contain the time restriction.
+                    2. <input id="views_restriction" type="text"/> should contain the views restriction
+           TODO - A
+           DONE
+                Remember that POST request should contain numbers, not strings.
+                GET /api/code/latest and GET /code/latest should not return any restricted snippets.
+                GET /api/code/UUID should not be accessible if one of the restrictions is triggered. Return 404 Not Found in this case and all the cases when no snippet with such a UUID was found.
+                GET /api/code/UUID should show what restrictions apply to the code piece. Use the keys time and views for that. A zero value (0) should correspond to the absence of the restriction.
+                1. time field contains the time (in seconds) during which the snippet is accessible.
+                2. views field shows how many additional views are allowed for this snippet (excluding the current one).
+           TODO - B
+                GET /code/UUID should contain the following elements:
+                1.<span id="time_restriction"> ... </span> in case the time restriction is applied.
+                2. <span id="views_restriction"> ... </span> in case the views restriction is applied.
+                Note: if only one of the restrictions is applied, you should show only one of the above elements.
+        */
+
+        public CodeEntity getCodeById(final UUID id) {
+            Optional<CodeEntity> code = codeRepository.findById(id);
+            if (code.isEmpty() || isRestricted(code.get())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            CodeEntity codeEntity = code.get();
+            codeEntity.setViewCount(codeEntity.getViewCount() + 1);
+
+            return codeRepository.save(codeEntity);
+        }
+
+        public CodeEntity publishNewCode(final CodeForm newCode) {
+            CodeEntity codeEntity = new CodeEntity(newCode.getCode(), LocalDateTime.now(), newCode.getTime(), newCode.getViews(), 0L);
+            return codeRepository.save(codeEntity);
+        }
+
+        public List<CodeEntity> getPaginatedAndSortedCode() {
+            List<CodeEntity> paginatedAndSortedCode = codeRepository.findByViewsLessThanAndTimeLessThan(1L, 1L, PageRequest.of(0, 10, Sort.by("date").descending())).getContent();
+            return paginatedAndSortedCode;
+        }
+
+        private boolean isRestricted(CodeEntity code) {
+            LocalDateTime dateTimeLimit = code.getDate().plusSeconds(code.getTime());
+            final boolean after = LocalDateTime.now().isAfter(dateTimeLimit);
+            if (code.getViews() > 0 && code.getViewCount() >= code.getViews() || code.getTime() > 0 && after) {
+                return true;
+            }
+            return false;
+        }
+
+
+    }
+  learner_created: true
+- name: src/platform/controller/ApiController.java
+  visible: true
+  text: |
+    package platform.controller;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.web.bind.annotation.*;
+    import platform.dto.CodeForm;
+    import platform.dto.CodeResponse;
+    import platform.model.CodeEntity;
+    import platform.service.CodeService;
+    import platform.util.CodeMapper;
+
+    import java.time.LocalDateTime;
+    import java.time.temporal.ChronoUnit;
+    import java.util.List;
+    import java.util.UUID;
+
+    @RestController
+    @RequestMapping(path = "/api/code")
+    public class ApiController {
+
+        private CodeService codeService;
+
+        @Autowired
+        public ApiController(CodeService codeService) {
+            this.codeService = codeService;
+        }
+
+        @GetMapping("/{id}")
+        public CodeResponse getCodeById(@PathVariable UUID id) {
+
+            CodeEntity code = codeService.getCodeById(id);
+            long viewsLeft = Math.max(0, code.getViews() - code.getViewCount());
+            long timePassed = ChronoUnit.SECONDS.between(code.getDate(), LocalDateTime.now());
+            long timeLeft = timePassed > 0 && code.getTime() - timePassed > 0 ? code.getTime() - timePassed : 0;
+            return CodeMapper.toCodeResponse(code, viewsLeft, timeLeft);
+
+        }
+
+        @PostMapping(path = "/new", produces = "application/json")
+        public String publishNewCode(@RequestBody CodeForm newCode) {
+            CodeEntity code = codeService.publishNewCode(newCode);
+            return "{ \"id\" : \"" + code.getId() + "\" }";
+        }
+        @GetMapping("/latest")
+        public List<CodeResponse> getCodeJSONLatest() {
+            List<CodeEntity> codeEntityList = codeService.getPaginatedAndSortedCode();
+            List<CodeResponse> response = CodeMapper.toListCodeResponse(codeEntityList);
+            return response;
+        }
+    }
+  learner_created: true
+- name: src/platform/dto/CodeResponse.java
+  visible: true
+  text: |
+    package platform.dto;
+
+    import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+    import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    public class CodeResponse {
+        private String code;
+        private String date;
+        private long time;
+        private long views;
+
+        public CodeResponse(String code, String date, long time, long views) {
+            this.code = code;
+            this.date = date;
+            this.time = time;
+            this.views = views;
+        }
+
+        public CodeResponse() {
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+        }
+
+        public long getViews() {
+            return views;
+        }
+
+        public void setViews(long views) {
+            this.views = views;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+    }
+  learner_created: true
+- name: src/platform/util/CodeMapper.java
+  visible: true
+  text: |
+    package platform.util;
+
+    import platform.dto.CodeResponse;
+    import platform.model.CodeEntity;
+
+    import java.time.LocalDateTime;
+    import java.util.ArrayList;
+    import java.util.List;
+
+    public class CodeMapper {
+        public static List<CodeResponse> toListCodeResponse(List<CodeEntity> codeEntityList) {
+            List<CodeResponse> responseList = new ArrayList<>();
+            for (CodeEntity code : codeEntityList) {
+                responseList.add(new CodeResponse(code.getCode(), CurrentDateTime.getString(code.getDate()), 0, 0));
+            }
+            return responseList;
+        }
+        public static CodeResponse toCodeResponse(CodeEntity codeEntity, long viewsLeft, long timeLeft) {
+            String string = CurrentDateTime.getString(codeEntity.getDate());
+            String code = codeEntity.getCode();
+            return new CodeResponse(code, string, timeLeft, viewsLeft);
+        }
+    }
+  learner_created: true
+- name: src/platform/dto/CodeForm.java
+  visible: true
+  text: |
+    package platform.dto;
+
+    import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+    import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    public class CodeForm {
+        private String code;
+        private long time;
+        private long views;
+
+        public CodeForm(String code, long time, long views) {
+            this.code = code;
+            this.time = time;
+            this.views = views;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+        }
+
+        public long getViews() {
+            return views;
+        }
+
+        public void setViews(long views) {
+            this.views = views;
+        }
+
+        public CodeForm() {
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        @Override
+        public String toString() {
+            return "CodeDto{" +
+                    "code='" + code + '\'' +
+                    '}';
+        }
+    }
+  learner_created: true
+- name: src/platform/model/CodeEntity.java
+  visible: true
+  text: "package platform.model;\n\nimport com.fasterxml.jackson.annotation.JsonFormat;\n\
+    import com.fasterxml.jackson.databind.PropertyNamingStrategy;\nimport com.fasterxml.jackson.databind.annotation.JsonNaming;\n\
+    \nimport javax.persistence.*;\nimport java.time.LocalDateTime;\nimport java.util.UUID;\n\
+    \n@Entity\n@Table(name = \"codes\")\n@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)\n\
+    public class CodeEntity {\n\n    @Id\n    @GeneratedValue\n    private UUID id;\n\
+    \n    @Column(name = \"code\")\n    private String code;\n\n    @Column(name =\
+    \ \"date\")\n    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")\n    private LocalDateTime\
+    \ date;\n    \n    @Column(name = \"time\")\n    private long time;\n\n    @Column(name\
+    \ = \"views\")\n    private long views;\n\n    @Column(name = \"view_count\")\n\
+    \    private long viewCount;\n\n    public CodeEntity() {\n    }\n\n    public\
+    \ CodeEntity(String code, LocalDateTime date, long time, long views, long viewCount)\
+    \ {\n        this.code = code;\n        this.date = date;\n        this.time =\
+    \ time;\n        this.views = views;\n        this.viewCount = viewCount;\n  \
+    \  }\n\n    public long getTime() {\n        return time;\n    }\n\n    public\
+    \ void setTime(long time) {\n        this.time = time;\n    }\n\n    public long\
+    \ getViews() {\n        return views;\n    }\n\n    public void setViews(long\
+    \ views) {\n        this.views = views;\n    }\n\n    public long getViewCount()\
+    \ {\n        return viewCount;\n    }\n\n    public void setViewCount(long viewCount)\
+    \ {\n        this.viewCount = viewCount;\n    }\n\n    public String getCode()\
+    \ {\n        return code;\n    }\n\n    public void setCode(String code) {\n \
+    \       this.code = code;\n    }\n\n\n    public UUID getId() {\n        return\
+    \ id;\n    }\n\n    public void setId(UUID id) {\n        this.id = id;\n    }\n\
+    \n    public LocalDateTime getDate() {\n        return date;\n    }\n\n    public\
+    \ void setDate(LocalDateTime date) {\n        this.date = date;\n    }\n\n   \
+    \ @Override\n    public String toString() {\n        return \"CodeEntity{\" +\n\
+    \                \"id=\" + id +\n                \", publishDateTime=\" + date\
+    \ +\n                '}';\n    }\n}\n"
+  learner_created: true
+- name: src/resources/templates/code.ftlh
+  visible: true
+  text: |-
+    <html>
+        <head>
+            <title>Code</title>
+            <link rel="stylesheet"
+                  href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/styles/default.min.css">
+            <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.2.1/build/highlight.min.js"></script>
+            <script>hljs.initHighlightingOnLoad();</script>
+        </head>
+        <body>
+            <span id="time_restriction">${codeWithId.getTime()} seconds left</span>
+            <span id="views_restriction">${codeWithId.getViews()} views left</span>
+            <span id="load_date">${codeWithId.getDate()}</span>
+            <pre id="code_snippet"><code>${codeWithId.getCode()}</code></pre>
+
+        </body>
+
+    </html>
+  learner_created: true
+- name: src/resources/templates/new.ftlh
+  visible: true
+  text: |-
+    <html lang="en">
+    <head>
+        <title>Create</title>
+    </head>
+    <body>
+    <textarea id="code_snippet">...</textarea> <br>
+    <label for="time_restriction">
+        time limit
+    </label>
+    <input id="time_restriction" type="number"/>
+
+    <label form="views_restriction">view limit</label>
+    <input id="views_restriction" type="number"/>
+
+    <button id="send_snippet" type="submit" onclick="send()">Submit</button>
+    <script>
+    function send() {
+    let object = {
+    "code": document.getElementById("code_snippet").value,
+    "time": document.getElementById("time_restriction").value,
+    "views": document.getElementById("views_restriction").value
+    };
+
+    let json = JSON.stringify(object);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", '/api/code/new', false)
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    xhr.send(json);
+
+    if (xhr.status == 200) {
+    alert("Success!");
+    }
+    }
+    </script>
+
+    </body>
+    </html>
+  learner_created: true
+- name: src/platform/repository/CodeRepository.java
+  visible: true
+  text: |
+    package platform.repository;
+
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
+    import org.springframework.data.repository.PagingAndSortingRepository;
+    import org.springframework.stereotype.Repository;
+    import platform.model.CodeEntity;
+
+    import java.util.UUID;
+
+    @Repository
+    public interface CodeRepository extends PagingAndSortingRepository<CodeEntity, UUID> {
+        Page<CodeEntity> findByViewsLessThanAndTimeLessThan(long views, long time, Pageable pageable);
+    }
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/130/stages/696/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Tue, 26 Oct 2021 12:47:45 UTC
 record: -1

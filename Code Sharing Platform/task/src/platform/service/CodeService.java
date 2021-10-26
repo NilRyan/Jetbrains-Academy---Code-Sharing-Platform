@@ -61,12 +61,13 @@ public class CodeService {
     }
 
     public CodeEntity publishNewCode(final CodeForm newCode) {
-        CodeEntity codeEntity = new CodeEntity(newCode.getCode(), LocalDateTime.now(), newCode.getTime(), newCode.getViews(), 0L);
+        boolean isSecret = newCode.getTime() > 0 || newCode.getViews() > 0 ? true : false;
+        CodeEntity codeEntity = new CodeEntity(newCode.getCode(), LocalDateTime.now(), newCode.getTime(), newCode.getViews(), 0L, isSecret);
         return codeRepository.save(codeEntity);
     }
 
     public List<CodeEntity> getPaginatedAndSortedCode() {
-        List<CodeEntity> paginatedAndSortedCode = codeRepository.findByViewsLessThanAndTimeLessThan(1L, 1L, PageRequest.of(0, 10, Sort.by("date").descending())).getContent();
+        List<CodeEntity> paginatedAndSortedCode = codeRepository.findByIsSecretFalse(PageRequest.of(0, 10, Sort.by("date").descending())).getContent();
         return paginatedAndSortedCode;
     }
 

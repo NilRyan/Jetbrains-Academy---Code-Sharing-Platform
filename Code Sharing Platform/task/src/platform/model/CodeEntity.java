@@ -33,15 +33,27 @@ public class CodeEntity {
     @Column(name = "view_count")
     private long viewCount;
 
+    @Column(name = "is_secret")
+    private boolean isSecret;
+
     public CodeEntity() {
     }
 
-    public CodeEntity(String code, LocalDateTime date, long time, long views, long viewCount) {
+    public CodeEntity(String code, LocalDateTime date, long time, long views, long viewCount, boolean isSecret) {
         this.code = code;
         this.date = date;
         this.time = time;
         this.views = views;
         this.viewCount = viewCount;
+        this.isSecret = isSecret;
+    }
+
+    public boolean isSecret() {
+        return isSecret;
+    }
+
+    public void setSecret(boolean secret) {
+        isSecret = secret;
     }
 
     public long getTime() {

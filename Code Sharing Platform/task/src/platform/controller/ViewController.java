@@ -31,11 +31,11 @@ public class ViewController {
     @GetMapping("/{id}")
     public String getCode(@PathVariable UUID id, Model model) {
         CodeEntity code = codeService.getCodeById(id);
-        long viewsLeft = Math.max(0, code.getViews() - code.getViewCount());
+        long viewsLeft = code.getViews() - code.getViewCount();
         long timePassed = ChronoUnit.SECONDS.between(code.getDate(), LocalDateTime.now());
         long timeLeft = timePassed > 0 && code.getTime() - timePassed > 0 ? code.getTime() - timePassed : 0;
         CodeResponse codeResponse = CodeMapper.toCodeResponse(code, viewsLeft, timeLeft);
-        model.addAttribute("codeWithId", codeResponse);
+        model.addAttribute("codeResponse", codeResponse);
         return "code";
     }
 

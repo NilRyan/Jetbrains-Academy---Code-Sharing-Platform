@@ -7,8 +7,16 @@
         <script>hljs.initHighlightingOnLoad();</script>
     </head>
     <body>
-        <span id="load_date">${codeWithId.getDate()}</span>
-        <pre id="code_snippet"><code>${codeWithId.getCode()}</code></pre>
+        <#if (codeResponse.getTime() > 0)>
+            <span id="time_restriction">${codeResponse.getTime()} seconds left</span>
+        </#if>
+
+        <#if (codeResponse.getViews() >= 0 )>
+            <span id="views_restriction">${codeResponse.getViews()} views left</span>
+        </#if>
+
+        <span id="load_date">${codeResponse.getDate()}</span>
+        <pre id="code_snippet"><code>${codeResponse.getCode()}</code></pre>
 
     </body>
 

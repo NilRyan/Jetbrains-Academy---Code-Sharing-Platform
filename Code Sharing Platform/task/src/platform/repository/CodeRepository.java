@@ -10,5 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface CodeRepository extends PagingAndSortingRepository<CodeEntity, UUID> {
-    Page<CodeEntity> findByViewsLessThanAndTimeLessThan(long views, long time, Pageable pageable);
+    Page<CodeEntity> findByIsSecretFalse(Pageable pageable);
 }
