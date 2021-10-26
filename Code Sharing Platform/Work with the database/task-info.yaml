@@ -467,6 +467,232 @@ files:
         }
     }
   learner_created: false
+- name: src/platform/controller/ViewController.java
+  visible: true
+  text: |
+    package platform.controller;
+
+    import org.springframework.stereotype.Controller;
+
+    @Controller
+    public class ViewController {
+    }
+  learner_created: true
+- name: src/platform/model/Code.java
+  visible: true
+  text: |
+    package platform.model;
+
+    import com.fasterxml.jackson.annotation.JsonProperty;
+
+    public class Code {
+        private String code;
+        private String date;
+
+        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+        String title;
+
+        public Code() {
+        }
+
+        public Code(String code, String date, String title) {
+            this.code = code;
+            this.date = date;
+            this.title = title;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+    }
+  learner_created: true
+- name: src/platform/controller/Controller.java
+  visible: true
+  text: |
+    package platform.controller;
+
+    import org.springframework.ui.Model;
+    import org.springframework.web.bind.annotation.*;
+    import platform.model.Code;
+
+    import java.time.LocalDateTime;
+    import java.time.format.DateTimeFormatter;
+    import java.util.ArrayList;
+    import java.util.List;
+
+    @org.springframework.stereotype.Controller
+    public class Controller {
+        private final String titleData = "Code";
+        List<Code> codeList = new ArrayList<>();
+
+
+        /*
+            TODO
+            DONE
+                1. Implement individual snippet GET /code/N
+                    - should return HTML that contains the N-th uploaded code snippet
+                2. Implement individual snippet GET /api/code/N
+                    - should return JSON with N-th uploaded code snippet
+                3. Store in memory / list
+
+         */
+
+        @GetMapping(path = "/code/{id}", produces = "text/html")
+        public String getCode(@PathVariable String id, Model model) {
+            Code code = codeList.get(Integer.parseInt(id));
+            model.addAttribute("codeWithId", code);
+            return "code";
+        }
+
+        @GetMapping(path = "/api/code/{id}", produces = "application/json;charset=UTF-8")
+        @ResponseBody
+        public Code getCodeJSON(@PathVariable String id) {
+            return codeList.get(Integer.parseInt(id));
+        }
+        @GetMapping(path= "/code/new", produces = "text/html")
+        public String getCodeNew() {
+            return "new";
+        }
+        @GetMapping(path= "/code/latest", produces = "text/html")
+        public String getCodeNew(Model model) {
+            int codeListSize = codeList.size();
+            List<Code> latest = codeListSize > 10 ? codeList.subList(codeListSize - 10, codeListSize) : codeList;
+            model.addAttribute("latestList", latest);
+            return "latest";
+        }
+        @PostMapping(path = "/api/code/new", produces = "application/json;charset=UTF-8" )
+        @ResponseBody
+        public String setApiCode(@RequestBody Code reCode) {
+            Code code = new Code();
+            code.setCode(reCode.getCode());
+            code.setTitle("Code");
+            code.setDate(getCurrentDateTime());
+            codeList.add(code);
+            return "{ \"id\" : \"" + codeList.indexOf(code) + "\" }";
+        }
+
+        @GetMapping(path = "/api/code/latest", produces = "application/json;charset=UTF-8")
+        @ResponseBody
+        public List<Code> getCodeJSONLatest() {
+            int codeListSize = codeList.size();
+            List<Code> result = new ArrayList<>(codeList);
+            List<Code> responseCode = new ArrayList<>();
+            for (int i = result.size() - 1; i >= 0; i--) {
+                Code eachCode = codeList.get(i);
+                responseCode.add(eachCode);
+            }
+
+            if (codeListSize > 10) {
+                responseCode = responseCode.subList(0, 10);
+            }
+
+            return responseCode;
+        }
+        public String getCurrentDateTime() {
+            LocalDateTime today = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return today.format(formatter);
+        }
+
+    }
+  learner_created: true
+- name: src/platform/controller/ApiController.java
+  visible: true
+  text: |
+    package platform.controller;
+
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class ApiController {
+    }
+  learner_created: true
+- name: src/resources/templates/code.ftlh
+  visible: true
+  text: |-
+    <html>
+        <head>
+            <title>${codeWithId.getTitle()}</title>
+        </head>
+        <body>
+            <span id="load_date">${codeWithId.getDate()}</span>
+            <pre id="code_snippet">${codeWithId.getCode()}</pre>
+        </body>
+    </html>
+  learner_created: true
+- name: src/resources/templates/new.ftlh
+  visible: true
+  text: |-
+    <html lang="en">
+    <head>
+        <title>Create</title>
+    </head>
+    <body>
+    <textarea id="code_snippet">...</textarea> <br>
+    <button id="send_snippet" type="submit" onclick="send()">Submit</button>
+    <script>
+    function send() {
+    let object = {
+    "code": document.getElementById("code_snippet").value
+    };
+
+    let json = JSON.stringify(object);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", '/api/code/new', false)
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    xhr.send(json);
+
+    if (xhr.status == 200) {
+    alert("Success!");
+    }
+    }
+    </script>
+
+    </body>
+    </html>
+  learner_created: true
+- name: src/resources/templates/latest.ftlh
+  visible: true
+  text: |-
+    <html>
+        <head>
+            <title>Latest</title>
+        </head>
+        <body>
+            <#list latestList?reverse as codes>
+                <span id="load_date">${codes.getDate()}</span>
+                <pre id="code_snippet">${codes.getCode()}</pre>
+            </#list>
+        </body>
+    </html>
+  learner_created: true
+- name: src/platform/model/CodeEntity.java
+  visible: true
+  learner_created: true
+- name: src/platform/util/CurrentDateTime.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/130/stages/695/implement#comment
 status: Unchecked
 record: -1

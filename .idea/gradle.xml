@@ -42,6 +42,11 @@
             <option value="$PROJECT_DIR$/Topics/LocalTime/Seconds since start of a day" />
             <option value="$PROJECT_DIR$/Topics/LocalTime/Some hours and minutes ago" />
             <option value="$PROJECT_DIR$/Topics/LocalTime/Theory" />
+            <option value="$PROJECT_DIR$/Topics/Optional/Check an Optional value" />
+            <option value="$PROJECT_DIR$/Topics/Optional/Create an Optional value" />
+            <option value="$PROJECT_DIR$/Topics/Optional/Sum up optional values" />
+            <option value="$PROJECT_DIR$/Topics/Optional/The address book" />
+            <option value="$PROJECT_DIR$/Topics/Optional/Theory" />
             <option value="$PROJECT_DIR$/Topics/Posting and deleting data via REST/Theory" />
             <option value="$PROJECT_DIR$/Topics/Posting and deleting data via REST/Web calculator" />
             <option value="$PROJECT_DIR$/Topics/The Collections Framework overview/Blacklist" />
