@@ -4,11 +4,21 @@
 </head>
 <body>
 <textarea id="code_snippet">...</textarea> <br>
+<label for="time_restriction">
+    time limit
+</label>
+<input id="time_restriction" type="number"/>
+
+<label form="views_restriction">view limit</label>
+<input id="views_restriction" type="number"/>
+
 <button id="send_snippet" type="submit" onclick="send()">Submit</button>
 <script>
 function send() {
 let object = {
-"code": document.getElementById("code_snippet").value
+"code": document.getElementById("code_snippet").value,
+"time": document.getElementById("time_restriction").value,
+"views": document.getElementById("views_restriction").value
 };
 
 let json = JSON.stringify(object);

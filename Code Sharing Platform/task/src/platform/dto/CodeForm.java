@@ -6,9 +6,29 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class CodeForm {
     private String code;
+    private long time;
+    private long views;
 
-    public CodeForm(String code) {
+    public CodeForm(String code, long time, long views) {
         this.code = code;
+        this.time = time;
+        this.views = views;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public long getViews() {
+        return views;
+    }
+
+    public void setViews(long views) {
+        this.views = views;
     }
 
     public CodeForm() {

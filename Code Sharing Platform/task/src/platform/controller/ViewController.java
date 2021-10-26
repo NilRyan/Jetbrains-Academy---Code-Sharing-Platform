@@ -10,9 +10,12 @@ import platform.dto.CodeResponse;
 import platform.model.CodeEntity;
 import platform.service.CodeService;
 import platform.util.CodeMapper;
-import platform.util.CurrentDateTime;
 
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 @RequestMapping(path = "/code", produces = "text/html")
@@ -26,9 +29,12 @@ public class ViewController {
     }
 
     @GetMapping("/{id}")
-    public String getCode(@PathVariable String id, Model model) {
-        CodeEntity code = codeService.getCodeById(Long.parseLong(id));
-        CodeResponse codeResponse = CodeMapper.toCodeResponse(code);
+    public String getCode(@PathVariable UUID id, Model model) {
+        CodeEntity code = codeService.getCodeById(id);
+        long viewsLeft = Math.max(0, code.getViews() - code.getViewCount());
+        long timePassed = ChronoUnit.SECONDS.between(code.getDate(), LocalDateTime.now());
+        long timeLeft = timePassed > 0 && code.getTime() - timePassed > 0 ? code.getTime() - timePassed : 0;
+        CodeResponse codeResponse = CodeMapper.toCodeResponse(code, viewsLeft, timeLeft);
         model.addAttribute("codeWithId", codeResponse);
         return "code";
     }

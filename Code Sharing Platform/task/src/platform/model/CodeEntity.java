@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "codes")
@@ -13,8 +14,8 @@ import java.time.LocalDateTime;
 public class CodeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    private UUID id;
 
     @Column(name = "code")
     private String code;
@@ -22,11 +23,49 @@ public class CodeEntity {
     @Column(name = "date")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime date;
+    
+    @Column(name = "time")
+    private long time;
 
+    @Column(name = "views")
+    private long views;
 
-    public CodeEntity(String code, LocalDateTime date) {
+    @Column(name = "view_count")
+    private long viewCount;
+
+    public CodeEntity() {
+    }
+
+    public CodeEntity(String code, LocalDateTime date, long time, long views, long viewCount) {
         this.code = code;
         this.date = date;
+        this.time = time;
+        this.views = views;
+        this.viewCount = viewCount;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public long getViews() {
+        return views;
+    }
+
+    public void setViews(long views) {
+        this.views = views;
+    }
+
+    public long getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(long viewCount) {
+        this.viewCount = viewCount;
     }
 
     public String getCode() {
@@ -37,23 +76,12 @@ public class CodeEntity {
         this.code = code;
     }
 
-    public CodeEntity(Long id, LocalDateTime date) {
-        this.id = id;
-        this.date = date;
-    }
 
-    public CodeEntity() {
-    }
-
-    public CodeEntity(LocalDateTime date) {
-        this.date = date;
-    }
-
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
